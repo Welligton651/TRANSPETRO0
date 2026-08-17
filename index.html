@@ -1,0 +1,1812 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>STUDPETRO - Plataforma Corporativa de Quizzes e Aprendizado</title>
+    
+    <!-- PWA & Mobile Web App Meta Tags -->
+    <meta name="theme-color" content="#ea580c">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="STUDPETRO">
+    <link rel="apple-touch-icon" href="https://placehold.co/192x192/ea580c/ffffff?text=STUDPETRO">
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Chart.js for Analytics -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#fff7ed',
+                            100: '#ffedd5',
+                            200: '#fed7aa',
+                            300: '#fdba74',
+                            400: '#fb923c',
+                            500: '#f97316',
+                            600: '#ea580c', // Strong Orange Primary
+                            700: '#c2410c',
+                            800: '#9a3412',
+                            900: '#7c2d12',
+                            dark: '#0f172a'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
+            color: #1e293b;
+            transition: background-color 0.3s, color 0.3s;
+        }
+        
+        /* Custom Theme Overrides */
+        body.theme-slate {
+            --brand-main: #334155;
+            --brand-accent: #0284c7;
+        }
+        body.theme-dark {
+            background-color: #0b0f17;
+            color: #f1f5f9;
+        }
+        body.theme-cyan {
+            --brand-main: #0891b2;
+            --brand-accent: #f97316;
+        }
+
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(226, 232, 240, 0.8);
+        }
+        .dark .glass-panel {
+            background: rgba(15, 23, 42, 0.85);
+            border: 1px solid rgba(51, 65, 85, 0.6);
+        }
+
+        .gradient-orange {
+            background: linear-gradient(135deg, #f97316 0%, #c2410c 100%);
+        }
+
+        .shadow-orange-glow {
+            box-shadow: 0 10px 25px -5px rgba(234, 88, 12, 0.3);
+        }
+
+        /* Hide scrollbars for clean UI */
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+        @keyframes pulse-subtle {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.85; }
+        }
+        .animate-pulse-subtle { animation: pulse-subtle 3s infinite ease-in-out; }
+    </style>
+</head>
+<body class="h-full flex flex-col min-h-screen selection:bg-brand-500 selection:text-white">
+
+    <!-- TOP NAVIGATION BAR -->
+    <header class="sticky top-0 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                
+                <!-- Logo STUDPETRO -->
+                <div class="flex items-center space-x-3 cursor-pointer" onclick="switchTab('dashboard')">
+                    <div class="w-10 h-10 rounded-xl gradient-orange flex items-center justify-center text-white shadow-orange-glow font-bold text-xl">
+                        <i class="fa-solid fa-fire-flame-curved"></i>
+                    </div>
+                    <div>
+                        <span class="text-2xl font-extrabold tracking-tight text-slate-900 dark:text-white">STUD<span class="text-brand-600">PETRO</span></span>
+                        <span class="hidden sm:inline-block text-xs font-semibold px-2 py-0.5 rounded bg-brand-100 text-brand-700 dark:bg-brand-900/50 dark:text-brand-300 ml-2">CORPORATE v2.5</span>
+                    </div>
+                </div>
+
+                <!-- Desktop Navigation Tabs -->
+                <nav class="hidden md:flex space-x-1 lg:space-x-2">
+                    <button onclick="switchTab('dashboard')" id="nav-dashboard" class="nav-btn px-3 py-2 rounded-lg font-medium text-sm transition-all flex items-center space-x-2 text-brand-600 bg-brand-50 dark:bg-brand-950/40">
+                        <i class="fa-solid fa-chart-pie"></i><span>Dashboard</span>
+                    </button>
+                    <button onclick="switchTab('generator')" id="nav-generator" class="nav-btn px-3 py-2 rounded-lg font-medium text-sm transition-all flex items-center space-x-2 text-slate-600 hover:text-brand-600 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800">
+                        <i class="fa-solid fa-wand-magic-sparkles"></i><span>Gerar Quiz (IA)</span>
+                    </button>
+                    <button onclick="switchTab('quizzes')" id="nav-quizzes" class="nav-btn px-3 py-2 rounded-lg font-medium text-sm transition-all flex items-center space-x-2 text-slate-600 hover:text-brand-600 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800">
+                        <i class="fa-solid fa-list-check"></i><span>Meus Quizzes</span>
+                    </button>
+                    <button onclick="switchTab('slides')" id="nav-slides" class="nav-btn px-3 py-2 rounded-lg font-medium text-sm transition-all flex items-center space-x-2 text-slate-600 hover:text-brand-600 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800">
+                        <i class="fa-solid fa-brain"></i><span>Aulas & Macetes</span>
+                    </button>
+                </nav>
+
+                <!-- Actions & Settings -->
+                <div class="flex items-center space-x-2">
+                    <!-- Cloud Sync Indicator Badge -->
+                    <div id="cloud-status-badge" class="p-2 rounded-lg text-slate-500 flex items-center space-x-1.5" title="Sincronização em Nuvem Firebase">
+                        <i id="cloud-status-icon" class="fa-solid fa-cloud-arrow-up text-lg text-blue-500 animate-pulse"></i>
+                        <span id="cloud-status-text" class="hidden xl:inline text-xs font-semibold bg-blue-100 text-blue-800 dark:bg-blue-950/60 dark:text-blue-300 px-2 py-0.5 rounded-full">Conectando Nuvem...</span>
+                    </div>
+
+                    <!-- PWA Install Button (Android / Windows) -->
+                    <button id="btn-install-app" onclick="triggerPwaInstall()" class="hidden p-2 rounded-lg text-brand-600 hover:bg-brand-50 dark:text-brand-400 dark:hover:bg-slate-800 transition-colors flex items-center space-x-1.5" title="Instalar Aplicativo Web (PWA)">
+                        <i class="fa-solid fa-download text-lg text-brand-600 dark:text-brand-400 animate-bounce"></i>
+                        <span class="hidden xl:inline text-xs font-bold bg-brand-100 text-brand-800 dark:bg-brand-950/80 dark:text-brand-300 px-2 py-0.5 rounded-full">Instalar App</span>
+                    </button>
+
+                    <button onclick="openApiKeyModal()" class="p-2 rounded-lg text-slate-500 hover:text-brand-600 dark:text-slate-400 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors flex items-center space-x-1.5" title="Configurar Chave API Google Gemini">
+                        <i class="fa-solid fa-key text-lg text-emerald-600 dark:text-emerald-400"></i>
+                        <span class="hidden xl:inline text-xs font-semibold bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 px-2 py-0.5 rounded-full">API Conectada</span>
+                    </button>
+
+                    <!-- Theme Selector -->
+                    <div class="relative group">
+                        <button class="p-2 rounded-lg text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors" title="Personalizar Tema">
+                            <i class="fa-solid fa-palette text-lg"></i>
+                        </button>
+                        <div class="absolute right-0 top-full mt-2 w-48 bg-white dark:bg-slate-800 rounded-xl shadow-xl border border-slate-200 dark:border-slate-700 p-2 hidden group-hover:block z-50">
+                            <p class="text-xs font-semibold text-slate-400 px-2 py-1 uppercase">Tema da Interface</p>
+                            <button onclick="setTheme('orange')" class="w-full text-left px-2 py-1.5 rounded text-sm hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center justify-between">
+                                <span>Orange Strong</span>
+                                <span class="w-3 h-3 rounded-full bg-orange-600"></span>
+                            </button>
+                            <button onclick="setTheme('dark')" class="w-full text-left px-2 py-1.5 rounded text-sm hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center justify-between">
+                                <span>Dark Corporate</span>
+                                <span class="w-3 h-3 rounded-full bg-slate-900"></span>
+                            </button>
+                            <button onclick="setTheme('cyan')" class="w-full text-left px-2 py-1.5 rounded text-sm hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center justify-between">
+                                <span>Petroleum Cyan</span>
+                                <span class="w-3 h-3 rounded-full bg-cyan-600"></span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Rapid Quiz Trigger -->
+                    <button onclick="startWeakPointsQuiz()" class="hidden sm:flex items-center space-x-2 bg-brand-600 hover:bg-brand-700 text-white px-3.5 py-2 rounded-xl text-sm font-semibold shadow-md transition-all transform hover:-translate-y-0.5">
+                        <i class="fa-solid fa-bolt text-yellow-300"></i>
+                        <span>Quiz Recomendado</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- MAIN CONTENT CONTAINER AREA -->
+    <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+
+        <!-- ALERT / TOAST CONTAINER -->
+        <div id="toast-container" class="fixed bottom-20 md:bottom-6 right-6 z-50 flex flex-col space-y-2 pointer-events-none"></div>
+
+        <!-- ========================================== -->
+        <!-- VIEW 1: DASHBOARD / DESEMPENHO (DEFAULT)   -->
+        <!-- ========================================== -->
+        <section id="view-dashboard" class="view-content space-y-6">
+            
+            <!-- Welcome Banner -->
+            <div class="relative overflow-hidden rounded-2xl gradient-orange p-6 sm:p-8 text-white shadow-xl">
+                <div class="relative z-10 max-w-2xl">
+                    <span class="inline-block px-3 py-1 rounded-full bg-white/20 text-xs font-semibold uppercase tracking-wider mb-3">Painel de Aprendizado Ativo</span>
+                    <h1 class="text-2xl sm:text-4xl font-extrabold tracking-tight mb-2">Bem-vindo ao STUDPETRO</h1>
+                    <p class="text-orange-100 text-sm sm:text-base mb-6 leading-relaxed">
+                        Transforme editais e apostilas em simulados inteligentes. Cole o conteúdo, teste seus conhecimentos e foque direto nos seus pontos fracos.
+                    </p>
+                    <div class="flex flex-wrap gap-3">
+                        <button onclick="switchTab('generator')" class="bg-white text-brand-700 hover:bg-orange-50 font-bold px-5 py-2.5 rounded-xl shadow text-sm transition-all flex items-center space-x-2">
+                            <i class="fa-solid fa-plus"></i><span>Criar Quiz de Texto Colado</span>
+                        </button>
+                        <button onclick="startWeakPointsQuiz()" class="bg-brand-800/60 hover:bg-brand-800 text-white font-semibold px-4 py-2.5 rounded-xl text-sm border border-white/20 transition-all flex items-center space-x-2">
+                            <i class="fa-solid fa-crosshair"></i><span>Reforçar Pontos Fracos</span>
+                        </button>
+                        <button id="btn-banner-install-app" onclick="triggerPwaInstall()" class="bg-slate-900/80 hover:bg-slate-900 text-white font-semibold px-4 py-2.5 rounded-xl text-sm border border-brand-400/30 transition-all flex items-center space-x-2">
+                            <i class="fa-solid fa-mobile-screen-button text-yellow-400"></i><span>Instalar App Web</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- KPI STATS CARDS GRID -->
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm flex items-center space-x-4">
+                    <div class="w-12 h-12 rounded-xl bg-orange-100 dark:bg-orange-950/60 text-brand-600 flex items-center justify-center text-xl shrink-0">
+                        <i class="fa-solid fa-list-check"></i>
+                    </div>
+                    <div>
+                        <p class="text-xs font-semibold text-slate-400 uppercase">Respondidas</p>
+                        <h3 id="stat-total" class="text-2xl font-black text-slate-800 dark:text-white">0</h3>
+                    </div>
+                </div>
+
+                <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm flex items-center space-x-4">
+                    <div class="w-12 h-12 rounded-xl bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 flex items-center justify-center text-xl shrink-0">
+                        <i class="fa-solid fa-circle-check"></i>
+                    </div>
+                    <div>
+                        <p class="text-xs font-semibold text-slate-400 uppercase">Acertos</p>
+                        <h3 id="stat-correct" class="text-2xl font-black text-emerald-600">0</h3>
+                    </div>
+                </div>
+
+                <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm flex items-center space-x-4">
+                    <div class="w-12 h-12 rounded-xl bg-rose-100 dark:bg-rose-950/60 text-rose-600 flex items-center justify-center text-xl shrink-0">
+                        <i class="fa-solid fa-circle-xmark"></i>
+                    </div>
+                    <div>
+                        <p class="text-xs font-semibold text-slate-400 uppercase">Erros</p>
+                        <h3 id="stat-wrong" class="text-2xl font-black text-rose-600">0</h3>
+                    </div>
+                </div>
+
+                <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm flex items-center space-x-4">
+                    <div class="w-12 h-12 rounded-xl bg-blue-100 dark:bg-blue-950/60 text-blue-600 flex items-center justify-center text-xl shrink-0">
+                        <i class="fa-solid fa-bullseye"></i>
+                    </div>
+                    <div>
+                        <p class="text-xs font-semibold text-slate-400 uppercase">Precisão</p>
+                        <h3 id="stat-accuracy" class="text-2xl font-black text-blue-600">0%</h3>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ANALYTICS CHART & WEAK POINTS PANEL -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Performance Chart -->
+                <div class="lg:col-span-2 bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm">
+                    <h3 class="text-lg font-bold text-slate-800 dark:text-white mb-4"><i class="fa-solid fa-chart-column text-brand-600 mr-2"></i>Desempenho por Tópico</h3>
+                    <div class="h-64">
+                        <canvas id="topicPerformanceChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Weak Points Diagnostics -->
+                <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col justify-between">
+                    <div>
+                        <h3 class="text-lg font-bold text-slate-800 dark:text-white mb-2"><i class="fa-solid fa-triangle-exclamation text-amber-500 mr-2"></i>Diagnóstico de Pontos Fracos</h3>
+                        <p class="text-xs text-slate-500 mb-4">Análise automática baseada no histórico de resoluções de simulados.</p>
+                        <div id="weak-topics-list" class="space-y-2 mb-4">
+                            <!-- Populated dynamically -->
+                        </div>
+                    </div>
+                    <button onclick="startWeakPointsQuiz()" class="w-full py-2.5 rounded-xl gradient-orange text-white font-bold text-xs shadow-orange-glow hover:opacity-95 transition-all flex items-center justify-center space-x-2">
+                        <i class="fa-solid fa-bolt text-yellow-300"></i>
+                        <span>Gerar Quiz Focado nos Pontos Fracos</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Quick Access Quizzes Grid -->
+            <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-bold text-slate-800 dark:text-white">Quizzes Prontos e Recentes</h3>
+                    <button onclick="switchTab('quizzes')" class="text-xs font-bold text-brand-600 hover:text-brand-700">Ver Todos <i class="fa-solid fa-arrow-right ml-1"></i></button>
+                </div>
+                <div id="dashboard-recent-quizzes" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <!-- Populated dynamically -->
+                </div>
+            </div>
+
+        </section>
+
+        <!-- ========================================== -->
+        <!-- VIEW 2: GERADOR DE QUIZ POR COLAGEM (IA)   -->
+        <!-- ========================================== -->
+        <section id="view-generator" class="view-content hidden space-y-6">
+            <div class="bg-white dark:bg-slate-800 p-6 sm:p-8 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm max-w-4xl mx-auto">
+                
+                <div class="flex items-center space-x-3 mb-6">
+                    <div class="w-12 h-12 rounded-2xl bg-orange-100 dark:bg-orange-950/60 text-brand-600 flex items-center justify-center text-2xl font-bold">
+                        <i class="fa-solid fa-paste"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-xl sm:text-2xl font-black text-slate-800 dark:text-white">Gerador Instantâneo de Quiz</h2>
+                        <p class="text-xs sm:text-sm text-slate-500">Cole seu questionário, prova, resumo ou texto técnico abaixo. A IA criará o simulado com dicas e resoluções.</p>
+                    </div>
+                </div>
+
+                <!-- Paste Box Form -->
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-2">Título do Simulado (Opcional)</label>
+                        <input type="text" id="generator-title" placeholder="Ex: Legislação do Petróleo & Segurança Operacional" class="w-full px-4 py-3 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-white focus:ring-2 focus:ring-brand-500 focus:outline-none transition-all">
+                    </div>
+
+                    <div>
+                        <div class="flex justify-between items-center mb-2">
+                            <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">Cole o Texto do Questionário ou Matéria</label>
+                            <button onclick="pastePresetSample()" class="text-xs font-semibold text-brand-600 hover:underline"><i class="fa-solid fa-lightbulb"></i> Usar Exemplo de Teste Petrobras</button>
+                        </div>
+                        <textarea id="generator-raw-text" rows="8" placeholder="Cole aqui seu texto completo. Podem ser questões de múltipla escolha ou apenas texto explicativo de apostila..." class="w-full p-4 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-white focus:ring-2 focus:ring-brand-500 focus:outline-none font-mono text-sm leading-relaxed"></textarea>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-2">Nível / Foco</label>
+                            <select id="generator-difficulty" class="w-full px-4 py-3 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-white focus:ring-2 focus:ring-brand-500 focus:outline-none">
+                                <option value="Corporativo / Concurso">Corporativo / Título Técnico</option>
+                                <option value="Iniciante / Operacional">Iniciante / Conceitual</option>
+                                <option value="Avançado / Engenharia">Avançado / Engenharia & Operações</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-2">Geração de Mnemônicos</label>
+                            <select id="generator-mnemonics" class="w-full px-4 py-3 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-white focus:ring-2 focus:ring-brand-500 focus:outline-none">
+                                <option value="true">Incluir Dicas e Macetes em TODAS as questões</option>
+                                <option value="false">Apenas Dicas Simples e Resolução</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <div class="pt-4">
+                        <button id="btn-generate-quiz" onclick="generateQuizFromText()" class="w-full py-4 rounded-xl gradient-orange text-white font-extrabold text-base shadow-orange-glow hover:opacity-95 transition-all flex items-center justify-center space-x-3">
+                            <i class="fa-solid fa-wand-magic-sparkles text-lg"></i>
+                            <span>PROCESSAR CONTEÚDO E GERAR QUIZ</span>
+                        </button>
+                    </div>
+
+                    <!-- Loading Spinner Overlay & Progress Bar -->
+                    <div id="generator-loading" class="hidden py-8 text-center space-y-3">
+                        <div class="inline-block animate-spin rounded-full h-10 w-10 border-4 border-brand-600 border-t-transparent"></div>
+                        <p id="generator-status-text" class="text-sm font-bold text-slate-700 dark:text-slate-300 animate-pulse">A Inteligência Artificial do STUDPETRO está criando seu quiz e elaborando explicações detalhadas...</p>
+                        
+                        <!-- Batch Progress Bar Container -->
+                        <div id="generator-progress-bar-container" class="w-full bg-slate-200 dark:bg-slate-700 h-3 rounded-full overflow-hidden mt-3 max-w-md mx-auto hidden">
+                            <div id="generator-progress-bar" class="bg-brand-600 h-full transition-all duration-300" style="width: 0%;"></div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- VIEW 3: INTERACTIVE QUIZ PLAYER            -->
+        <!-- ========================================== -->
+        <section id="view-player" class="view-content hidden space-y-6">
+            <div id="quiz-player-card" class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-md p-6 sm:p-8 max-w-3xl mx-auto">
+                
+                <!-- Player Header / Stats Bar -->
+                <div class="flex items-center justify-between pb-4 border-b border-slate-200 dark:border-slate-700 mb-6">
+                    <div>
+                        <span id="player-quiz-topic" class="text-xs font-bold px-2.5 py-1 rounded-full bg-brand-100 text-brand-700 dark:bg-brand-900/60 dark:text-brand-300 uppercase">Tópico</span>
+                        <h2 id="player-quiz-title" class="text-lg font-bold text-slate-800 dark:text-white mt-1">Título do Quiz</h2>
+                    </div>
+                    <div class="text-right">
+                        <span class="text-xs text-slate-400 font-semibold uppercase">Progresso</span>
+                        <div id="player-counter" class="text-sm font-extrabold text-brand-600">Questão 1 de 5</div>
+                    </div>
+                </div>
+
+                <!-- Progress Bar -->
+                <div class="w-full bg-slate-100 dark:bg-slate-700 h-2 rounded-full overflow-hidden mb-6">
+                    <div id="player-progress-bar" class="bg-brand-600 h-full transition-all duration-300" style="width: 20%;"></div>
+                </div>
+
+                <!-- Question Text -->
+                <div class="mb-6">
+                    <p id="player-question-text" class="text-base sm:text-lg font-bold text-slate-900 dark:text-white leading-relaxed">
+                        Carregando enunciado da questão...
+                    </p>
+                </div>
+
+                <!-- Options List Container -->
+                <div id="player-options-container" class="space-y-3 mb-6">
+                    <!-- Populated via JS -->
+                </div>
+
+                <!-- Hint / Tip Box Toggle -->
+                <div id="player-hint-box" class="hidden mb-6 p-4 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 text-amber-900 dark:text-amber-200 text-sm">
+                    <div class="flex items-center space-x-2 font-bold mb-1">
+                        <i class="fa-solid fa-lightbulb text-amber-500"></i>
+                        <span>Dica Direcionada:</span>
+                    </div>
+                    <p id="player-hint-text">Dica sobre o conceito da questão...</p>
+                </div>
+
+                <!-- Resolution & Explanation Block (Show after submit) -->
+                <div id="player-explanation-box" class="hidden mb-6 p-5 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 space-y-3">
+                    <div class="flex items-center space-x-2 font-extrabold text-sm" id="player-result-badge">
+                        <!-- Result icon/text -->
+                    </div>
+                    <div class="text-sm leading-relaxed" id="player-explanation-text">
+                        Explicação detalhada...
+                    </div>
+                    <!-- Mnemonic Highlight Card -->
+                    <div id="player-mnemonic-card" class="hidden p-3 rounded-xl bg-orange-50 dark:bg-brand-950/40 border border-orange-200 dark:border-brand-800/50 text-xs text-brand-900 dark:text-brand-200">
+                        <span class="font-extrabold uppercase text-brand-600 block mb-0.5"><i class="fa-solid fa-brain"></i> Macete de Memória / Mnemônico:</span>
+                        <span id="player-mnemonic-text">Siga a regra...</span>
+                    </div>
+                </div>
+
+                <!-- Footer Action Buttons -->
+                <div class="flex flex-wrap items-center justify-between gap-3 pt-4 border-t border-slate-100 dark:border-slate-700">
+                    <button onclick="toggleHint()" id="btn-player-hint" class="px-4 py-2 rounded-xl text-xs font-bold text-amber-600 bg-amber-50 dark:bg-amber-950/30 dark:text-amber-300 hover:bg-amber-100 transition-colors flex items-center space-x-2">
+                        <i class="fa-solid fa-lightbulb"></i><span>Ver Dica</span>
+                    </button>
+
+                    <div class="flex space-x-2 ml-auto">
+                        <button id="btn-submit-answer" onclick="submitPlayerAnswer()" class="px-6 py-2.5 rounded-xl gradient-orange text-white font-bold text-sm shadow-orange-glow hover:opacity-95 transition-all">
+                            Confirmar Resposta
+                        </button>
+                        <button id="btn-next-question" onclick="nextPlayerQuestion()" class="hidden px-6 py-2.5 rounded-xl bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 font-bold text-sm hover:opacity-90 transition-all flex items-center space-x-2">
+                            <span>Próxima Questão</span>
+                            <i class="fa-solid fa-chevron-right"></i>
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- VIEW 4: MEUS QUIZZES / HISTÓRICO           -->
+        <!-- ========================================== -->
+        <section id="view-quizzes" class="view-content hidden space-y-6">
+            <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div>
+                    <h2 class="text-2xl font-black text-slate-800 dark:text-white">Meus Quizzes e Simulados</h2>
+                    <p class="text-xs sm:text-sm text-slate-500">Acesse ou re-execute qualquer questionário salvo em sua plataforma.</p>
+                </div>
+                <button onclick="switchTab('generator')" class="gradient-orange text-white px-4 py-2.5 rounded-xl font-bold text-sm shadow-orange-glow flex items-center space-x-2">
+                    <i class="fa-solid fa-plus"></i><span>Novo Quiz</span>
+                </button>
+            </div>
+
+            <!-- Quiz Cards Grid -->
+            <div id="all-quizzes-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Populated dynamically -->
+            </div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- VIEW 5: AULAS EM SLIDES & MNEMÔNICOS       -->
+        <!-- ========================================== -->
+        <section id="view-slides" class="view-content hidden space-y-6">
+            <div class="bg-white dark:bg-slate-800 p-6 sm:p-8 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm max-w-4xl mx-auto">
+                
+                <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between pb-6 border-b border-slate-200 dark:border-slate-700 gap-4">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-12 h-12 rounded-2xl bg-orange-100 dark:bg-orange-950/60 text-brand-600 flex items-center justify-center text-2xl font-bold">
+                            <i class="fa-solid fa-chalkboard-user"></i>
+                        </div>
+                        <div>
+                            <h2 class="text-xl sm:text-2xl font-black text-slate-800 dark:text-white">Slides de Estudo & Macetes</h2>
+                            <p class="text-xs sm:text-sm text-slate-500">Mnemônicos e resumo visual das matérias dos quizzes.</p>
+                        </div>
+                    </div>
+
+                    <button onclick="generateCustomSlideDeck()" class="px-4 py-2.5 rounded-xl border border-brand-600 text-brand-600 dark:text-brand-400 font-bold text-sm hover:bg-brand-50 dark:hover:bg-brand-950/40 transition-all flex items-center space-x-2">
+                        <i class="fa-solid fa-wand-magic-sparkles"></i>
+                        <span>Gerar Novos Slides com IA</span>
+                    </button>
+                </div>
+
+                <!-- SLIDE PRESENTATION COMPONENT CONTAINER -->
+                <div id="slide-viewer" class="relative mt-6 rounded-2xl gradient-orange text-white p-6 sm:p-10 min-h-[360px] flex flex-col justify-between shadow-2xl">
+                    <!-- Top Slide Info -->
+                    <div class="flex justify-between items-center text-xs font-bold uppercase tracking-wider text-orange-200">
+                        <span id="slide-topic-badge">CONCEITO TÉCNICO</span>
+                        <span id="slide-number-indicator">Slide 1 de 3</span>
+                    </div>
+
+                    <!-- Slide Central Content -->
+                    <div class="my-6 space-y-4">
+                        <h3 id="slide-title" class="text-xl sm:text-3xl font-extrabold tracking-tight">Título do Macete</h3>
+                        <p id="slide-body" class="text-sm sm:text-base text-orange-50 leading-relaxed max-w-2xl">
+                            Conteúdo explicativo e resumo dinâmico para fixação do aprendizado...
+                        </p>
+                        <!-- Mnemonic Highlight Box -->
+                        <div class="p-4 rounded-xl bg-white/10 backdrop-blur border border-white/20 text-white font-mono text-sm shadow-inner">
+                            <i class="fa-solid fa-key mr-2 text-yellow-300"></i>
+                            <span id="slide-mnemonic-formula" class="font-bold">MNEMÔNICO: LIMPE (Legalidade, Impessoalidade, Moralidade, Publicidade, Eficiência)</span>
+                        </div>
+                    </div>
+
+                    <!-- Slide Controls -->
+                    <div class="flex items-center justify-between pt-4 border-t border-white/20">
+                        <button onclick="prevSlide()" id="btn-prev-slide" class="px-4 py-2 rounded-xl bg-white/20 hover:bg-white/30 text-white font-bold text-xs sm:text-sm transition-all flex items-center space-x-1">
+                            <i class="fa-solid fa-chevron-left"></i><span>Anterior</span>
+                        </button>
+
+                        <div id="slide-dots-container" class="flex space-x-1.5">
+                            <!-- Populated JS -->
+                        </div>
+
+                        <button onclick="nextSlide()" id="btn-next-slide" class="px-4 py-2 rounded-xl bg-white text-brand-700 hover:bg-orange-50 font-bold text-xs sm:text-sm shadow transition-all flex items-center space-x-1">
+                            <span>Próximo</span><i class="fa-solid fa-chevron-right"></i>
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+    </main>
+
+    <!-- API KEY MODAL -->
+    <div id="modal-api-key" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-2xl max-w-md w-full p-6 space-y-4">
+            <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-700 pb-3">
+                <div class="flex items-center space-x-2 text-brand-600">
+                    <i class="fa-solid fa-key text-xl"></i>
+                    <h3 class="font-extrabold text-slate-800 dark:text-white">Chave API do Google Gemini</h3>
+                </div>
+                <button onclick="closeApiKeyModal()" class="text-slate-400 hover:text-slate-600 dark:hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+                Sua chave API está ativa e integrada ao STUDPETRO. Ela é utilizada para processar os textos colados e gerar quizzes técnicos e slides com mnemônicos.
+            </p>
+            <div>
+                <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1">Chave API em uso</label>
+                <input type="text" id="input-api-key" class="w-full px-3 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-white text-sm font-mono focus:ring-2 focus:ring-brand-500 focus:outline-none" placeholder="Cole sua chave API do Google AI Studio...">
+            </div>
+            <div class="flex justify-end space-x-2 pt-2">
+                <button onclick="closeApiKeyModal()" class="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700">Cancelar</button>
+                <button onclick="saveApiKeyFromModal()" class="px-5 py-2 rounded-xl gradient-orange text-white font-bold text-xs shadow-orange-glow">Salvar Chave</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- PWA INSTALLATION GUIDANCE MODAL FOR ANDROID & WINDOWS -->
+    <div id="modal-pwa-install" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-2xl max-w-md w-full p-6 space-y-4">
+            <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-700 pb-3">
+                <div class="flex items-center space-x-2 text-brand-600">
+                    <i class="fa-solid fa-download text-xl"></i>
+                    <h3 class="font-extrabold text-slate-800 dark:text-white">Instalar Aplicativo STUDPETRO</h3>
+                </div>
+                <button onclick="closePwaModal()" class="text-slate-400 hover:text-slate-600 dark:hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            
+            <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+                O STUDPETRO pode ser instalado como um **Aplicativo Web Progressivo (PWA)** no seu Android ou Windows, criando um atalho direto na área de trabalho ou gaveta de apps.
+            </p>
+
+            <div id="pwa-prompt-direct-container">
+                <button onclick="executePwaInstallPrompt()" class="w-full py-3 rounded-xl gradient-orange text-white font-extrabold text-sm shadow-orange-glow flex items-center justify-center space-x-2">
+                    <i class="fa-solid fa-circle-down"></i>
+                    <span>CONFIRMAR INSTALAÇÃO AGORA</span>
+                </button>
+            </div>
+
+            <div class="space-y-3 pt-2 text-xs text-slate-500 dark:text-slate-400 border-t border-slate-100 dark:border-slate-700">
+                <p class="font-bold uppercase text-slate-700 dark:text-slate-300"><i class="fa-brands fa-android text-emerald-500 mr-1"></i> No Android (Chrome / Edge):</p>
+                <p class="text-xs">Toque no menu de 3 pontos no canto superior do navegador e selecione <strong>"Instalar aplicativo"</strong> ou <strong>"Adicionar à tela inicial"</strong>.</p>
+
+                <p class="font-bold uppercase text-slate-700 dark:text-slate-300 mt-2"><i class="fa-brands fa-windows text-blue-500 mr-1"></i> No Windows (Chrome / Edge):</p>
+                <p class="text-xs">Clique no ícone de instalação <i class="fa-solid fa-desktop ml-0.5"></i> na barra de endereço do navegador ou vá no menu do navegador -> <strong>"Salvar e compartilhar"</strong> -> <strong>"Instalar STUDPETRO"</strong>.</p>
+            </div>
+
+            <div class="flex justify-end pt-2">
+                <button onclick="closePwaModal()" class="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700">Fechar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MOBILE BOTTOM NAVIGATION BAR -->
+    <nav class="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 px-2 py-2 flex justify-around items-center">
+        <button onclick="switchTab('dashboard')" class="flex flex-col items-center p-2 text-brand-600 text-xs font-semibold">
+            <i class="fa-solid fa-chart-pie text-lg mb-0.5"></i>
+            <span>Painel</span>
+        </button>
+        <button onclick="switchTab('generator')" class="flex flex-col items-center p-2 text-slate-500 dark:text-slate-400 text-xs font-semibold">
+            <i class="fa-solid fa-wand-magic-sparkles text-lg mb-0.5"></i>
+            <span>Gerar IA</span>
+        </button>
+        <button onclick="switchTab('quizzes')" class="flex flex-col items-center p-2 text-slate-500 dark:text-slate-400 text-xs font-semibold">
+            <i class="fa-solid fa-list-check text-lg mb-0.5"></i>
+            <span>Quizzes</span>
+        </button>
+        <button onclick="switchTab('slides')" class="flex flex-col items-center p-2 text-slate-500 dark:text-slate-400 text-xs font-semibold">
+            <i class="fa-solid fa-brain text-lg mb-0.5"></i>
+            <span>Macetes</span>
+        </button>
+    </nav>
+
+    <!-- FIREBASE & APPLICATION LOGIC MODULE -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, getDoc, collection, onSnapshot, addDoc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // FIREBASE CONFIGURATION (Provided Transpetro Firebase Instance)
+        const userFirebaseConfig = {
+            apiKey: "AIzaSyBEd63YyfZEU4Uq2piHDvdEzHhxJc6fH58",
+            authDomain: "transpetro-90f81.firebaseapp.com",
+            projectId: "transpetro-90f81",
+            storageBucket: "transpetro-90f81.firebasestorage.app",
+            messagingSenderId: "1017823108989",
+            appId: "1:1017823108989:web:aca1e10e3b33a088313614",
+            measurementId: "G-5PV3YLZ65J"
+        };
+
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : userFirebaseConfig;
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'transpetro-90f81';
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        let currentUser = null;
+        let userId = null;
+        let isCloudSynced = false;
+
+        // APP STATE STORE
+        const DEFAULT_API_KEY = 'AQ.Ab8RN6J5A9WtEM6tgUbAjDZZUxITbjEGrLUGV8l70UTLw33QtQ';
+        let userApiKey = localStorage.getItem('studpetro_api_key') || DEFAULT_API_KEY;
+        let deferredPwaPrompt = null;
+
+        const DEFAULT_QUIZZES = [
+            {
+                id: 'quiz-petrobras-sample',
+                title: 'Simulado Geral - Segurança e Processos Indústria',
+                topic: 'Segurança & Operações',
+                createdAt: new Date().toISOString(),
+                questions: [
+                    {
+                        id: 1,
+                        questionText: 'Qual a principal finalidade da norma regulamentadora NR-20 no âmbito da indústria de petróleo e gás?',
+                        options: [
+                            'Regulamentar o uso de equipamentos de proteção individual apenas em alto mar.',
+                            'Estabelecer requisitos mínimos para a gestão da segurança e saúde no trabalho contra fatores de risco de acidentes provenientes das atividades com inflamáveis e combustíveis.',
+                            'Fiscalizar o imposto de renda incidente sobre a extração de petróleo bruto.',
+                            'Padronizar as manobras mecânicas de perfuração de poços de águas profundas.'
+                        ],
+                        correctIndex: 1,
+                        explanation: 'A NR-20 trata especificamente da Segurança e Saúde no Trabalho com Inflamáveis e Combustíveis em todas as suas etapas (extração, produção, armazenamento, transferência e manuseio).',
+                        tip: 'Pense em prevenção de incêndios e explosões com derivados de petróleo.',
+                        mnemonic: 'NR-20 = INFLAMÁVEIS E COMBUSTÍVEIS (Pense no número 20 como 20 litros de combustível).',
+                        topic: 'Segurança & NR-20'
+                    },
+                    {
+                        id: 2,
+                        questionText: 'O que caracteriza o processo de refinamento conhecido como Craqueamento Catalítico (FCC)?',
+                        options: [
+                            'Reação de mistura do petróleo bruto com água para diminuir sua viscosidade natural.',
+                            'Quebra de moléculas pesadas de hidrocarbonetos em frações mais leves e valiosas (como gasolina e GLP) utilizando altas temperaturas e catalisadores.',
+                            'Conformação mecânica de tubulações de alta pressão.',
+                            'Separação física de resíduos sólidos utilizando mantas filtrantes.'
+                        ],
+                        correctIndex: 1,
+                        explanation: 'O craqueamento (do inglês "crack" = quebrar) quebra as grandes cadeias de hidrocarbonetos pesados em moléculas menores com maior valor comercial.',
+                        tip: 'Lembre-se do significado da palavra "Crack" (quebrar).',
+                        mnemonic: 'CRAQUEAR = QUEBRAR moléculas pesadas para gerar gasolina!',
+                        topic: 'Refino de Petróleo'
+                    },
+                    {
+                        id: 3,
+                        questionText: 'Em relação ao triângulo do fogo, quais são os três elementos fundamentais necessários para que ocorra a combustão?',
+                        options: [
+                            'Combustível, Comburente (Oxigênio) e Fonte de Calor.',
+                            'Água, Petróleo e Nitrogênio.',
+                            'Pressão, Vácuo e Pressão Dinâmica.',
+                            'Coque, Metano e Gás Carbônico.'
+                        ],
+                        correctIndex: 0,
+                        explanation: 'A combustão exige obrigatoriamente um material que queima (combustível), o gás oxigênio (comburente) e energia inicial (calor).',
+                        tip: 'Sem oxigênio ou sem calor a chama se apaga imediatamente.',
+                        mnemonic: '3 Cs do Fogo: Calor + Combustível + Comburente (Oxigênio)',
+                        topic: 'Segurança & Combustão'
+                    }
+                ]
+            }
+        ];
+
+        const DEFAULT_SLIDES = [
+            {
+                topic: 'Segurança Industrial',
+                title: 'Tríade de Proteção Operacional (NR-20)',
+                body: 'A NR-20 exige controle rigoroso na manipulação de inflamáveis. Sempre identifique a fonte de ignição e garanta estanqueidade total das tubulações.',
+                mnemonic: 'Mnemônico C.A.P: Controle, Prontidão e Prevenção contínua.'
+            },
+            {
+                topic: 'Engenharia de Processos',
+                title: 'Macete do Craqueamento x Destilação',
+                body: 'Destilação é separação FÍSICA por ponto de ebulição. Craqueamento é transformação QUÍMICA que quebra moléculas pesadas.',
+                mnemonic: 'DESTILA = Separa | CRAQUEIA = Quebra!'
+            },
+            {
+                topic: 'Gestão de Qualidade',
+                title: 'Ciclo PDCA na Operação',
+                body: 'Ferramenta contínua para solução de problemas na plataforma: Plan (Planejar), Do (Fazer), Check (Checar) e Act (Agir).',
+                mnemonic: 'P.D.C.A = Planeja, Dispara, Checa, Ajeita!'
+            }
+        ];
+
+        // LOCAL STORAGE INITIALIZATION / FALLBACK
+        let quizzes = JSON.parse(localStorage.getItem('studpetro_quizzes')) || DEFAULT_QUIZZES;
+        let slides = JSON.parse(localStorage.getItem('studpetro_slides')) || DEFAULT_SLIDES;
+        let stats = JSON.parse(localStorage.getItem('studpetro_stats')) || {
+            totalAnswered: 0,
+            correctCount: 0,
+            wrongCount: 0,
+            topicStats: {}
+        };
+
+        // CURRENT PLAYER STATE
+        let currentQuiz = null;
+        let currentQuestionIdx = 0;
+        let selectedOptionIdx = null;
+        let currentSlideIdx = 0;
+        let topicChartInstance = null;
+
+        async function authenticateUser() {
+            try {
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } else {
+                    await signInAnonymously(auth);
+                }
+            } catch (err) {
+                console.warn("Autenticação Firebase falhou, operando em modo local:", err);
+                updateCloudStatus(false);
+            }
+        }
+
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                currentUser = user;
+                userId = user.uid;
+                isCloudSynced = true;
+                updateCloudStatus(true);
+                setupFirestoreListeners();
+            } else {
+                authenticateUser();
+            }
+        });
+
+        function updateCloudStatus(connected) {
+            const icon = document.getElementById('cloud-status-icon');
+            const text = document.getElementById('cloud-status-text');
+            if (!icon || !text) return;
+
+            if (connected) {
+                icon.className = "fa-solid fa-cloud-check text-lg text-emerald-500";
+                text.className = "hidden xl:inline text-xs font-semibold bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 px-2 py-0.5 rounded-full";
+                text.innerText = "Nuvem Conectada";
+            } else {
+                icon.className = "fa-solid fa-cloud-slash text-lg text-amber-500";
+                text.className = "hidden xl:inline text-xs font-semibold bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300 px-2 py-0.5 rounded-full";
+                text.innerText = "Modo Local";
+            }
+        }
+
+        function setupFirestoreListeners() {
+            if (!userId) return;
+
+            // 1. Quizzes Sync
+            const quizzesRef = collection(db, 'artifacts', appId, 'users', userId, 'quizzes');
+            onSnapshot(quizzesRef, (snapshot) => {
+                if (snapshot.empty) {
+                    // Seed initial defaults if cloud is empty
+                    DEFAULT_QUIZZES.forEach(q => saveQuizToCloud(q));
+                } else {
+                    const loadedQuizzes = [];
+                    snapshot.forEach(docSnap => {
+                        loadedQuizzes.push({ id: docSnap.id, ...docSnap.data() });
+                    });
+                    quizzes = loadedQuizzes;
+                    localStorage.setItem('studpetro_quizzes', JSON.stringify(quizzes));
+                    renderRecentQuizzes();
+                    renderAllQuizzes();
+                }
+            }, (error) => console.error("Erro no listener de quizzes:", error));
+
+            // 2. Slides Sync
+            const slidesRef = collection(db, 'artifacts', appId, 'users', userId, 'slides');
+            onSnapshot(slidesRef, (snapshot) => {
+                if (snapshot.empty) {
+                    DEFAULT_SLIDES.forEach(s => saveSlideToCloud(s));
+                } else {
+                    const loadedSlides = [];
+                    snapshot.forEach(docSnap => {
+                        loadedSlides.push({ id: docSnap.id, ...docSnap.data() });
+                    });
+                    slides = loadedSlides;
+                    localStorage.setItem('studpetro_slides', JSON.stringify(slides));
+                    renderSlideViewer();
+                }
+            }, (error) => console.error("Erro no listener de slides:", error));
+
+            // 3. Stats Sync
+            const statsRef = doc(db, 'artifacts', appId, 'users', userId, 'stats', 'main');
+            onSnapshot(statsRef, (docSnap) => {
+                if (docSnap.exists()) {
+                    stats = docSnap.data();
+                    localStorage.setItem('studpetro_stats', JSON.stringify(stats));
+                    renderDashboardStats();
+                } else {
+                    saveStatsToCloud(stats);
+                }
+            }, (error) => console.error("Erro no listener de estatísticas:", error));
+        }
+
+        // CLOUD PERSISTENCE WRAPPERS
+        async function saveQuizToCloud(quiz) {
+            if (!userId) return;
+            try {
+                const quizRef = doc(db, 'artifacts', appId, 'users', userId, 'quizzes', quiz.id);
+                await setDoc(quizRef, quiz);
+            } catch (err) {
+                console.error("Erro ao salvar quiz na nuvem:", err);
+            }
+        }
+
+        async function deleteQuizFromCloud(quizId) {
+            if (!userId) return;
+            try {
+                const quizRef = doc(db, 'artifacts', appId, 'users', userId, 'quizzes', quizId);
+                await deleteDoc(quizRef);
+            } catch (err) {
+                console.error("Erro ao deletar quiz da nuvem:", err);
+            }
+        }
+
+        async function saveSlideToCloud(slide) {
+            if (!userId) return;
+            try {
+                const slideId = slide.id || 'slide-' + Date.now() + '-' + Math.random().toString(36).substring(2, 7);
+                slide.id = slideId;
+                const slideRef = doc(db, 'artifacts', appId, 'users', userId, 'slides', slideId);
+                await setDoc(slideRef, slide);
+            } catch (err) {
+                console.error("Erro ao salvar slide na nuvem:", err);
+            }
+        }
+
+        async function saveStatsToCloud(statsData) {
+            if (!userId) return;
+            try {
+                const statsRef = doc(db, 'artifacts', appId, 'users', userId, 'stats', 'main');
+                await setDoc(statsRef, statsData);
+            } catch (err) {
+                console.error("Erro ao salvar estatísticas na nuvem:", err);
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            renderDashboardStats();
+            renderRecentQuizzes();
+            renderAllQuizzes();
+            renderSlideViewer();
+            initTopicChart();
+            initPWA();
+            
+            const savedTheme = localStorage.getItem('studpetro_theme') || 'orange';
+            setTheme(savedTheme);
+        });
+
+        function initPWA() {
+            const manifestData = {
+                name: "STUDPETRO - Plataforma Corporativa de Quizzes",
+                short_name: "STUDPETRO",
+                description: "Plataforma Corporativa de Quizzes, Simulados e Aprendizado",
+                start_url: "./",
+                display: "standalone",
+                background_color: "#0f172a",
+                theme_color: "#ea580c",
+                icons: [
+                    {
+                        src: "https://placehold.co/192x192/ea580c/ffffff?text=STUDPETRO",
+                        sizes: "192x192",
+                        type: "image/png",
+                        purpose: "any maskable"
+                    },
+                    {
+                        src: "https://placehold.co/512x512/ea580c/ffffff?text=STUDPETRO",
+                        sizes: "512x512",
+                        type: "image/png",
+                        purpose: "any maskable"
+                    }
+                ]
+            };
+            const manifestBlob = new Blob([JSON.stringify(manifestData)], { type: 'application/json' });
+            const manifestURL = URL.createObjectURL(manifestBlob);
+            const manifestLink = document.createElement('link');
+            manifestLink.rel = 'manifest';
+            manifestLink.href = manifestURL;
+            document.head.appendChild(manifestLink);
+
+            if ('serviceWorker' in navigator) {
+                const swContent = `
+                    const CACHE_NAME = 'studpetro-cache-v2';
+                    self.addEventListener('install', (e) => self.skipWaiting());
+                    self.addEventListener('activate', (e) => e.waitUntil(clients.claim()));
+                    self.addEventListener('fetch', (e) => {
+                        e.respondWith(
+                            fetch(e.request).catch(() => caches.match(e.request))
+                        );
+                    });
+                `;
+                const swBlob = new Blob([swContent], { type: 'application/javascript' });
+                const swUrl = URL.createObjectURL(swBlob);
+                navigator.serviceWorker.register(swUrl).catch(err => console.log('PWA SW:', err));
+            }
+
+            window.addEventListener('beforeinstallprompt', (e) => {
+                e.preventDefault();
+                deferredPwaPrompt = e;
+                const btnHeader = document.getElementById('btn-install-app');
+                if (btnHeader) btnHeader.classList.remove('hidden');
+            });
+
+            window.addEventListener('appinstalled', () => {
+                deferredPwaPrompt = null;
+                showToast('Aplicativo STUDPETRO instalado com sucesso!', 'success');
+                const btnHeader = document.getElementById('btn-install-app');
+                if (btnHeader) btnHeader.classList.add('hidden');
+            });
+        }
+
+        function triggerPwaInstall() {
+            document.getElementById('modal-pwa-install').classList.remove('hidden');
+        }
+
+        function closePwaModal() {
+            document.getElementById('modal-pwa-install').classList.add('hidden');
+        }
+
+        async function executePwaInstallPrompt() {
+            if (deferredPwaPrompt) {
+                deferredPwaPrompt.prompt();
+                const { outcome } = await deferredPwaPrompt.userChoice;
+                if (outcome === 'accepted') {
+                    showToast('Instalação aceita!', 'success');
+                }
+                deferredPwaPrompt = null;
+                closePwaModal();
+            } else {
+                showToast('Siga as instruções abaixo para concluir a instalação.', 'info');
+            }
+        }
+
+        function switchTab(tabId) {
+            document.querySelectorAll('.view-content').forEach(el => el.classList.add('hidden'));
+            const targetView = document.getElementById(`view-${tabId}`);
+            if (targetView) targetView.classList.remove('hidden');
+
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.classList.remove('text-brand-600', 'bg-brand-50', 'dark:bg-brand-950/40');
+                btn.classList.add('text-slate-600', 'dark:text-slate-300');
+            });
+            const activeBtn = document.getElementById(`nav-${tabId}`);
+            if (activeBtn) {
+                activeBtn.classList.add('text-brand-600', 'bg-brand-50', 'dark:bg-brand-950/40');
+            }
+
+            if (tabId === 'dashboard') renderDashboardStats();
+            if (tabId === 'quizzes') renderAllQuizzes();
+            
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function setTheme(themeName) {
+            document.body.classList.remove('theme-slate', 'theme-dark', 'theme-cyan', 'dark');
+            if (themeName === 'dark') {
+                document.body.classList.add('dark', 'theme-dark');
+            } else if (themeName === 'slate') {
+                document.body.classList.add('theme-slate');
+            } else if (themeName === 'cyan') {
+                document.body.classList.add('theme-cyan');
+            }
+            localStorage.setItem('studpetro_theme', themeName);
+            showToast(`Tema alterado para ${themeName.toUpperCase()}`, 'info');
+        }
+
+        function startQuiz(quizId) {
+            const found = quizzes.find(q => q.id === quizId);
+            if (!found || !found.questions || found.questions.length === 0) {
+                showToast('Quiz inválido ou sem questões.', 'error');
+                return;
+            }
+            currentQuiz = found;
+            currentQuestionIdx = 0;
+            switchTab('player');
+            loadPlayerQuestion();
+        }
+
+        function loadPlayerQuestion() {
+            if (!currentQuiz) return;
+            const q = currentQuiz.questions[currentQuestionIdx];
+            selectedOptionIdx = null;
+
+            document.getElementById('player-quiz-title').innerText = currentQuiz.title;
+            document.getElementById('player-quiz-topic').innerText = q.topic || currentQuiz.topic || 'Geral';
+            document.getElementById('player-counter').innerText = `Questão ${currentQuestionIdx + 1} de ${currentQuiz.questions.length}`;
+            
+            const pct = ((currentQuestionIdx + 1) / currentQuiz.questions.length) * 100;
+            document.getElementById('player-progress-bar').style.width = `${pct}%`;
+
+            document.getElementById('player-question-text').innerText = q.questionText;
+
+            const optionsContainer = document.getElementById('player-options-container');
+            optionsContainer.innerHTML = '';
+
+            q.options.forEach((optText, idx) => {
+                const optBtn = document.createElement('button');
+                optBtn.className = `option-btn w-full p-4 rounded-xl border text-left text-sm font-medium transition-all flex items-start space-x-3 bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-700 hover:border-brand-500`;
+                optBtn.onclick = () => selectOption(idx);
+                optBtn.innerHTML = `
+                    <span class="w-6 h-6 rounded-full border border-slate-300 dark:border-slate-600 flex items-center justify-center text-xs font-bold shrink-0 mt-0.5 option-indicator">${String.fromCharCode(65 + idx)}</span>
+                    <span class="text-slate-800 dark:text-slate-200 leading-relaxed">${optText}</span>
+                `;
+                optionsContainer.appendChild(optBtn);
+            });
+
+            document.getElementById('player-hint-box').classList.add('hidden');
+            document.getElementById('player-explanation-box').classList.add('hidden');
+            document.getElementById('player-mnemonic-card').classList.add('hidden');
+            document.getElementById('btn-submit-answer').classList.remove('hidden');
+            document.getElementById('btn-next-question').classList.add('hidden');
+        }
+
+        function selectOption(idx) {
+            selectedOptionIdx = idx;
+            const buttons = document.querySelectorAll('.option-btn');
+            buttons.forEach((btn, i) => {
+                if (i === idx) {
+                    btn.classList.add('border-brand-600', 'bg-brand-50', 'dark:bg-brand-950/40', 'ring-2', 'ring-brand-500');
+                    btn.querySelector('.option-indicator').classList.add('bg-brand-600', 'text-white', 'border-brand-600');
+                } else {
+                    btn.classList.remove('border-brand-600', 'bg-brand-50', 'dark:bg-brand-950/40', 'ring-2', 'ring-brand-500');
+                    btn.querySelector('.option-indicator').classList.remove('bg-brand-600', 'text-white', 'border-brand-600');
+                }
+            });
+        }
+
+        function toggleHint() {
+            const q = currentQuiz.questions[currentQuestionIdx];
+            const hintBox = document.getElementById('player-hint-box');
+            document.getElementById('player-hint-text').innerText = q.tip || 'Analise atentamente os conceitos descritos no enunciado.';
+            hintBox.classList.toggle('hidden');
+        }
+
+        function submitPlayerAnswer() {
+            if (selectedOptionIdx === null) {
+                showToast('Selecione uma alternativa antes de confirmar.', 'warning');
+                return;
+            }
+
+            const q = currentQuiz.questions[currentQuestionIdx];
+            const isCorrect = (selectedOptionIdx === q.correctIndex);
+            const topic = q.topic || currentQuiz.topic || 'Geral';
+
+            stats.totalAnswered++;
+            if (isCorrect) {
+                stats.correctCount++;
+            } else {
+                stats.wrongCount++;
+            }
+
+            if (!stats.topicStats[topic]) {
+                stats.topicStats[topic] = { correct: 0, wrong: 0 };
+            }
+            if (isCorrect) {
+                stats.topicStats[topic].correct++;
+            } else {
+                stats.topicStats[topic].wrong++;
+            }
+            
+            saveStats();
+
+            const buttons = document.querySelectorAll('.option-btn');
+            buttons.forEach((btn, i) => {
+                btn.disabled = true;
+                if (i === q.correctIndex) {
+                    btn.classList.add('bg-emerald-50', 'dark:bg-emerald-950/40', 'border-emerald-500', 'text-emerald-900');
+                } else if (i === selectedOptionIdx && !isCorrect) {
+                    btn.classList.add('bg-rose-50', 'dark:bg-rose-950/40', 'border-rose-500', 'text-rose-900');
+                }
+            });
+
+            const resultBadge = document.getElementById('player-result-badge');
+            if (isCorrect) {
+                resultBadge.className = "flex items-center space-x-2 font-extrabold text-sm text-emerald-600 dark:text-emerald-400";
+                resultBadge.innerHTML = `<i class="fa-solid fa-circle-check text-lg"></i><span>RESPOSTA CORRETA! (+1 Ponto)</span>`;
+            } else {
+                resultBadge.className = "flex items-center space-x-2 font-extrabold text-sm text-rose-600 dark:text-rose-400";
+                resultBadge.innerHTML = `<i class="fa-solid fa-circle-xmark text-lg"></i><span>RESPOSTA INCORRETA (A alternativa correta é ${String.fromCharCode(65 + q.correctIndex)})</span>`;
+            }
+
+            document.getElementById('player-explanation-text').innerText = q.explanation || 'Resolução conceitual fornecida com base nas diretrizes do simulado.';
+            
+            if (q.mnemonic) {
+                document.getElementById('player-mnemonic-card').classList.remove('hidden');
+                document.getElementById('player-mnemonic-text').innerText = q.mnemonic;
+            }
+
+            document.getElementById('player-explanation-box').classList.remove('hidden');
+            document.getElementById('btn-submit-answer').classList.add('hidden');
+            document.getElementById('btn-next-question').classList.remove('hidden');
+        }
+
+        function nextPlayerQuestion() {
+            currentQuestionIdx++;
+            if (currentQuestionIdx < currentQuiz.questions.length) {
+                loadPlayerQuestion();
+            } else {
+                showToast(`Quiz concluído com sucesso!`, 'success');
+                switchTab('dashboard');
+            }
+        }
+
+        function splitTextIntoQuestionChunks(rawText, questionsPerBatch = 12) {
+            const questionHeaderRegex = /(?:^|\n)(?=(?:Questão\s+)?\d+[\.\)\-]\s+)/gi;
+            let parts = rawText.split(questionHeaderRegex).map(p => p.trim()).filter(p => p.length > 0);
+
+            if (parts.length >= 2) {
+                const batches = [];
+                for (let i = 0; i < parts.length; i += questionsPerBatch) {
+                    const chunkParts = parts.slice(i, i + questionsPerBatch);
+                    batches.push({
+                        batchIndex: Math.floor(i / questionsPerBatch) + 1,
+                        startIndex: i + 1,
+                        endIndex: Math.min(i + questionsPerBatch, parts.length),
+                        totalQuestions: parts.length,
+                        text: chunkParts.join('\n\n')
+                    });
+                }
+                return { totalDetected: parts.length, batches };
+            } else {
+                const lines = rawText.split('\n');
+                if (lines.length > 80) {
+                    const batches = [];
+                    const linesPerChunk = 70;
+                    for (let i = 0; i < lines.length; i += linesPerChunk) {
+                        const chunkLines = lines.slice(i, i + linesPerChunk);
+                        batches.push({
+                            batchIndex: Math.floor(i / linesPerChunk) + 1,
+                            startIndex: null,
+                            endIndex: null,
+                            totalQuestions: null,
+                            text: chunkLines.join('\n')
+                        });
+                    }
+                    return { totalDetected: null, batches };
+                }
+                return { totalDetected: null, batches: [{ batchIndex: 1, text: rawText }] };
+            }
+        }
+
+        function parseLocalQuestionnaire(rawText) {
+            const questionBlocks = rawText.split(/(?:^|\n)(?=(?:Questão\s+)?\d+[\.\)\-]\s+)/gi).map(b => b.trim()).filter(b => b.length > 0);
+            const questions = [];
+
+            questionBlocks.forEach((block, idx) => {
+                const lines = block.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+                if (lines.length === 0) return;
+
+                let qText = '';
+                const options = [];
+                let correctIdx = 0;
+
+                lines.forEach(line => {
+                    const optMatch = line.match(/^([A-Ea-e1-5])[\.\)\-]\s*(.*)/);
+                    if (optMatch) {
+                        options.push(optMatch[2]);
+                        if (line.includes('*') || line.toLowerCase().includes('(correta)') || line.toLowerCase().includes('(gabarito)')) {
+                            correctIdx = options.length - 1;
+                        }
+                    } else if (options.length === 0) {
+                        qText += (qText ? ' ' : '') + line;
+                    }
+                });
+
+                while (options.length < 4) {
+                    options.push(`Alternativa ${String.fromCharCode(65 + options.length)}`);
+                }
+
+                qText = qText.replace(/^(?:Questão\s+)?\d+[\.\)\-]\s*/i, '');
+
+                questions.push({
+                    id: idx + 1,
+                    questionText: qText || `Questão ${idx + 1}`,
+                    options: options.slice(0, 5),
+                    correctIndex: correctIdx,
+                    explanation: `Resolução técnica da questão ${idx + 1} extraída diretamente do texto.`,
+                    tip: `Atenção aos detalhes do enunciado na questão ${idx + 1}.`,
+                    mnemonic: `MACETE Q${idx + 1}: Memorize o conceito central do tópico!`,
+                    topic: 'Conhecimentos Técnicos'
+                });
+            });
+
+            return questions;
+        }
+
+        async function generateQuizFromText() {
+            const rawText = document.getElementById('generator-raw-text').value.trim();
+            const customTitle = document.getElementById('generator-title').value.trim() || 'Simulado STUDPETRO Colado';
+            const difficulty = document.getElementById('generator-difficulty').value;
+            const includeMnemonics = document.getElementById('generator-mnemonics').value === 'true';
+
+            if (!rawText) {
+                showToast('Por favor, cole um texto ou questionário antes de gerar.', 'warning');
+                return;
+            }
+
+            const btn = document.getElementById('btn-generate-quiz');
+            const loading = document.getElementById('generator-loading');
+            const statusText = document.getElementById('generator-status-text');
+            const progressBarContainer = document.getElementById('generator-progress-bar-container');
+            const progressBar = document.getElementById('generator-progress-bar');
+
+            btn.classList.add('hidden');
+            loading.classList.remove('hidden');
+            progressBarContainer.classList.remove('hidden');
+            progressBar.style.width = '0%';
+
+            const chunkInfo = splitTextIntoQuestionChunks(rawText, 12);
+            const batches = chunkInfo.batches;
+            const totalBatches = batches.length;
+
+            let allQuestions = [];
+            let detectedTopic = 'Conhecimentos Técnicos';
+            const apiKey = userApiKey || DEFAULT_API_KEY;
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
+
+            try {
+                for (let i = 0; i < totalBatches; i++) {
+                    const batch = batches[i];
+                    const pct = Math.round(((i + 1) / totalBatches) * 100);
+
+                    if (chunkInfo.totalDetected) {
+                        statusText.innerText = `Processando lote ${i + 1} de ${totalBatches} (Questões ${batch.startIndex} a ${batch.endIndex} de ${chunkInfo.totalDetected})...`;
+                    } else {
+                        statusText.innerText = `Processando lote ${i + 1} de ${totalBatches}...`;
+                    }
+                    progressBar.style.width = `${pct}%`;
+
+                    const systemPrompt = `Você é um especialista em estruturar provas e simulados corporativos para a indústria de petróleo e gás (STUDPETRO).
+Sua missão MAIS IMPORTANTE é: Você DEVE processar e incluir TODAS AS QUESTÕES fornecidas no texto do usuário, SEM OMITIR, RESUMIR OU EXCLUIR NENHUMA QUESTÃO.
+Se o texto fornecido contiver 12 questões, você DEVE retornar exatamente 12 objetos de questões no array 'questions'.
+
+Para CADA questão gerada você DEVE fornecer:
+1. "questionText": Enunciado fiel, completo e sem cortes.
+2. "options": Array com exatamente 4 alternativas de texto (ou 5 se o original tiver 5).
+3. "correctIndex": Índice da alternativa correta (0 a 3 ou 0 a 4).
+4. "explanation": Explicação e fundamentação técnica detalhada da resposta.
+5. "tip": Dica objetiva para direcionar o raciocínio.
+6. "mnemonic": Macete ou mnemônico em português para memorização do conceito.
+7. "topic": O tópico principal da questão (ex: NR-20, Refino, Perfuração, Legislação, Manutenção, Combustão).`;
+
+                    const userQuery = `Analise o trecho a seguir e estruture TODAS AS QUESTÕES nele contidas em formato JSON estrito:
+---
+${batch.text}
+---
+Nível de Foco: ${difficulty}.
+LEMBRE-SE: Seja 100% fiel ao número de questões do texto acima. Não pule nenhuma!`;
+
+                    const payload = {
+                        contents: [{ parts: [{ text: userQuery }] }],
+                        systemInstruction: { parts: [{ text: systemPrompt }] },
+                        generationConfig: {
+                            responseMimeType: "application/json",
+                            responseSchema: {
+                                type: "OBJECT",
+                                properties: {
+                                    title: { type: "STRING" },
+                                    topic: { type: "STRING" },
+                                    questions: {
+                                        type: "ARRAY",
+                                        items: {
+                                            type: "OBJECT",
+                                            properties: {
+                                                questionText: { type: "STRING" },
+                                                options: { type: "ARRAY", items: { type: "STRING" } },
+                                                correctIndex: { type: "INTEGER" },
+                                                explanation: { type: "STRING" },
+                                                tip: { type: "STRING" },
+                                                mnemonic: { type: "STRING" },
+                                                topic: { type: "STRING" }
+                                            },
+                                            required: ["questionText", "options", "correctIndex", "explanation", "tip", "mnemonic", "topic"]
+                                        }
+                                    }
+                                },
+                                required: ["topic", "questions"]
+                            }
+                        }
+                    };
+
+                    const response = await fetchWithRetry(apiUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+
+                    const result = await response.json();
+                    const jsonText = result?.candidates?.[0]?.content?.parts?.[0]?.text;
+
+                    if (jsonText) {
+                        const parsedBatch = JSON.parse(jsonText);
+                        if (parsedBatch.topic) detectedTopic = parsedBatch.topic;
+                        if (parsedBatch.questions && parsedBatch.questions.length > 0) {
+                            parsedBatch.questions.forEach((q) => {
+                                allQuestions.push({
+                                    id: allQuestions.length + 1,
+                                    questionText: q.questionText,
+                                    options: q.options,
+                                    correctIndex: q.correctIndex,
+                                    explanation: q.explanation,
+                                    tip: q.tip,
+                                    mnemonic: q.mnemonic,
+                                    topic: q.topic || detectedTopic
+                                });
+                            });
+                        }
+                    }
+                }
+
+                if (allQuestions.length === 0) {
+                    throw new Error("Nenhuma questão foi retornada da IA. Usando processamento local.");
+                }
+
+            } catch (err) {
+                console.error("Erro na geração por lotes:", err);
+                const fallbackQuestions = parseLocalQuestionnaire(rawText);
+                if (fallbackQuestions.length > allQuestions.length) {
+                    allQuestions = fallbackQuestions;
+                }
+            } finally {
+                btn.classList.remove('hidden');
+                loading.classList.add('hidden');
+                progressBarContainer.classList.add('hidden');
+            }
+
+            if (allQuestions.length === 0) {
+                showToast('Não foi possível identificar questões no texto colado.', 'error');
+                return;
+            }
+
+            allQuestions.forEach(q => {
+                if (q.mnemonic) {
+                    const newSlide = {
+                        topic: q.topic || detectedTopic,
+                        title: `Macete Q${q.id}: ${q.topic}`,
+                        body: q.explanation.slice(0, 160) + '...',
+                        mnemonic: q.mnemonic
+                    };
+                    slides.unshift(newSlide);
+                    saveSlideToCloud(newSlide);
+                }
+            });
+            slides = slides.slice(0, 30);
+            saveSlides();
+
+            const newQuiz = {
+                id: 'quiz-' + Date.now(),
+                title: customTitle,
+                topic: detectedTopic,
+                createdAt: new Date().toISOString(),
+                questions: allQuestions
+            };
+
+            quizzes.unshift(newQuiz);
+            saveQuizzes();
+            saveQuizToCloud(newQuiz);
+
+            showToast(`Quiz com ${allQuestions.length} questões gerado e salvo na nuvem!`, 'success');
+            startQuiz(newQuiz.id);
+        }
+
+        async function fetchWithRetry(url, options, retries = 3, delay = 1000) {
+            for (let i = 0; i < retries; i++) {
+                try {
+                    const res = await fetch(url, options);
+                    if (res.ok) return res;
+                } catch (e) {
+                    if (i === retries - 1) throw e;
+                }
+                await new Promise(r => setTimeout(r, delay * Math.pow(2, i)));
+            }
+            throw new Error("Falha na comunicação com a API.");
+        }
+
+        function startWeakPointsQuiz() {
+            let worstTopic = null;
+            let lowestRatio = 1.0;
+
+            Object.keys(stats.topicStats).forEach(t => {
+                const s = stats.topicStats[t];
+                const total = s.correct + s.wrong;
+                if (total > 0) {
+                    const ratio = s.correct / total;
+                    if (ratio < lowestRatio) {
+                        lowestRatio = ratio;
+                        worstTopic = t;
+                    }
+                }
+            });
+
+            if (!worstTopic) {
+                showToast('Iniciando o simulado recomendado padrão!', 'info');
+                startQuiz(quizzes[0].id);
+                return;
+            }
+
+            showToast(`Gerando simulado focado em seu ponto fraco: ${worstTopic}`, 'info');
+            
+            const weakQuestions = [];
+            quizzes.forEach(q => {
+                q.questions.forEach(quest => {
+                    if (quest.topic === worstTopic || q.topic === worstTopic) {
+                        weakQuestions.push(quest);
+                    }
+                });
+            });
+
+            if (weakQuestions.length > 0) {
+                const weakQuiz = {
+                    id: 'quiz-weak-' + Date.now(),
+                    title: `Reforço Intensivo: ${worstTopic}`,
+                    topic: worstTopic,
+                    questions: weakQuestions
+                };
+                quizzes.unshift(weakQuiz);
+                saveQuizzes();
+                saveQuizToCloud(weakQuiz);
+                startQuiz(weakQuiz.id);
+            } else {
+                startQuiz(quizzes[0].id);
+            }
+        }
+
+        function renderDashboardStats() {
+            const elTotal = document.getElementById('stat-total');
+            const elCorrect = document.getElementById('stat-correct');
+            const elWrong = document.getElementById('stat-wrong');
+            const elAccuracy = document.getElementById('stat-accuracy');
+
+            if (elTotal) elTotal.innerText = stats.totalAnswered;
+            if (elCorrect) elCorrect.innerText = stats.correctCount;
+            if (elWrong) elWrong.innerText = stats.wrongCount;
+
+            const accuracy = stats.totalAnswered > 0 
+                ? Math.round((stats.correctCount / stats.totalAnswered) * 100) 
+                : 0;
+            if (elAccuracy) elAccuracy.innerText = `${accuracy}%`;
+
+            const weakListEl = document.getElementById('weak-topics-list');
+            if (weakListEl) {
+                weakListEl.innerHTML = '';
+
+                const topicKeys = Object.keys(stats.topicStats);
+                if (topicKeys.length === 0) {
+                    weakListEl.innerHTML = `<p class="text-xs text-slate-400 italic">Responda aos simulados para alimentar o diagnóstico de pontos fracos.</p>`;
+                } else {
+                    topicKeys.forEach(topic => {
+                        const st = stats.topicStats[topic];
+                        const tot = st.correct + st.wrong;
+                        const pct = tot > 0 ? Math.round((st.correct / tot) * 100) : 0;
+                        
+                        const item = document.createElement('div');
+                        item.className = "flex items-center justify-between text-xs p-2 rounded-lg bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700";
+                        item.innerHTML = `
+                            <span class="font-bold text-slate-700 dark:text-slate-300">${topic}</span>
+                            <span class="font-extrabold ${pct < 60 ? 'text-rose-600' : 'text-emerald-600'}">${pct}% de acertos</span>
+                        `;
+                        weakListEl.appendChild(item);
+                    });
+                }
+            }
+
+            updateTopicChart();
+        }
+
+        function initTopicChart() {
+            const chartCanvas = document.getElementById('topicPerformanceChart');
+            if (!chartCanvas) return;
+            const ctx = chartCanvas.getContext('2d');
+            topicChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Segurança', 'Refino', 'Legislação', 'Operações'],
+                    datasets: [
+                        {
+                            label: 'Acertos',
+                            data: [0, 0, 0, 0],
+                            backgroundColor: '#10b981',
+                            borderRadius: 6
+                        },
+                        {
+                            label: 'Erros',
+                            data: [0, 0, 0, 0],
+                            backgroundColor: '#f43f5e',
+                            borderRadius: 6
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: { stacked: true, grid: { display: false } },
+                        y: { stacked: true, beginAtZero: true }
+                    },
+                    plugins: {
+                        legend: { position: 'top' }
+                    }
+                }
+            });
+        }
+
+        function updateTopicChart() {
+            if (!topicChartInstance) return;
+            const labels = Object.keys(stats.topicStats);
+            
+            if (labels.length === 0) {
+                topicChartInstance.data.labels = ['Segurança', 'Refino', 'Processos'];
+                topicChartInstance.data.datasets[0].data = [3, 2, 4];
+                topicChartInstance.data.datasets[1].data = [1, 2, 0];
+            } else {
+                topicChartInstance.data.labels = labels;
+                topicChartInstance.data.datasets[0].data = labels.map(l => stats.topicStats[l].correct);
+                topicChartInstance.data.datasets[1].data = labels.map(l => stats.topicStats[l].wrong);
+            }
+            topicChartInstance.update();
+        }
+
+        function renderSlideViewer() {
+            if (slides.length === 0) return;
+            const current = slides[currentSlideIdx];
+
+            document.getElementById('slide-topic-badge').innerText = current.topic || 'ESTUDO CONTINUO';
+            document.getElementById('slide-number-indicator').innerText = `Slide ${currentSlideIdx + 1} de ${slides.length}`;
+            document.getElementById('slide-title').innerText = current.title;
+            document.getElementById('slide-body').innerText = current.body;
+            document.getElementById('slide-mnemonic-formula').innerText = current.mnemonic;
+
+            const dotsContainer = document.getElementById('slide-dots-container');
+            dotsContainer.innerHTML = '';
+            slides.forEach((_, idx) => {
+                const dot = document.createElement('span');
+                dot.className = `w-2.5 h-2.5 rounded-full transition-all ${idx === currentSlideIdx ? 'bg-white w-6' : 'bg-white/40'}`;
+                dotsContainer.appendChild(dot);
+            });
+        }
+
+        function nextSlide() {
+            currentSlideIdx = (currentSlideIdx + 1) % slides.length;
+            renderSlideViewer();
+        }
+
+        function prevSlide() {
+            currentSlideIdx = (currentSlideIdx - 1 + slides.length) % slides.length;
+            renderSlideViewer();
+        }
+
+        async function generateCustomSlideDeck() {
+            showToast('Solicitando novos slides e macetes à IA do Gemini...', 'info');
+
+            const systemPrompt = `Você é um instrutor e especialista em ensino para a indústria de petróleo e gás (STUDPETRO).
+Sua tarefa é criar um slide educacional em formato JSON contendo um macete/mnemônico inédito e memorável.
+Responda em JSON estrito contendo:
+1. "topic": O assunto principal (ex: NR-20, Refino, Perfuração, Química de Hidrocarbonetos).
+2. "title": Título objetivo e técnico.
+3. "body": Resumo pedagógico em 2 a 3 frases.
+4. "mnemonic": Um mnemônico/macete em maiúsculas fácil de gravar.`;
+
+            const userQuery = `Crie um slide técnico com mnemônico educativo. Tópicos de atenção: ${Object.keys(stats.topicStats).join(', ') || 'Segurança, Operações e Refino'}.`;
+
+            const payload = {
+                contents: [{ parts: [{ text: userQuery }] }],
+                systemInstruction: { parts: [{ text: systemPrompt }] },
+                generationConfig: {
+                    responseMimeType: "application/json",
+                    responseSchema: {
+                        type: "OBJECT",
+                        properties: {
+                            topic: { type: "STRING" },
+                            title: { type: "STRING" },
+                            body: { type: "STRING" },
+                            mnemonic: { type: "STRING" }
+                        },
+                        required: ["topic", "title", "body", "mnemonic"]
+                    }
+                }
+            };
+
+            const apiKey = userApiKey || DEFAULT_API_KEY;
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
+
+            try {
+                const response = await fetchWithRetry(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const result = await response.json();
+                const jsonText = result?.candidates?.[0]?.content?.parts?.[0]?.text;
+                
+                if (jsonText) {
+                    const slideData = JSON.parse(jsonText);
+                    slides.unshift(slideData);
+                    saveSlides();
+                    saveSlideToCloud(slideData);
+                    currentSlideIdx = 0;
+                    renderSlideViewer();
+                    showToast('Novo slide com macete gerado com sucesso!', 'success');
+                    return;
+                }
+            } catch (e) {
+                console.error("Erro ao gerar slide via IA:", e);
+            }
+
+            const newSlide = {
+                topic: 'Petróleo & Derivados',
+                title: 'Macete dos Pontos de Fulgor (Flash Point)',
+                body: 'O Ponto de Fulgor é a temperatura mínima para um combustível emitir vapores inflamáveis. Quanto menor o ponto de fulgor, maior o perigo!',
+                mnemonic: 'PONTO DE FULGOR = FUMACEIA E PEGA FOGO (Atenção em solventes leves!).'
+            };
+            slides.unshift(newSlide);
+            saveSlides();
+            saveSlideToCloud(newSlide);
+            currentSlideIdx = 0;
+            renderSlideViewer();
+            showToast('Novo slide adicionado!', 'success');
+        }
+
+        function openApiKeyModal() {
+            document.getElementById('input-api-key').value = userApiKey;
+            document.getElementById('modal-api-key').classList.remove('hidden');
+        }
+
+        function closeApiKeyModal() {
+            document.getElementById('modal-api-key').classList.add('hidden');
+        }
+
+        function saveApiKeyFromModal() {
+            const key = document.getElementById('input-api-key').value.trim();
+            if (key) {
+                userApiKey = key;
+                localStorage.setItem('studpetro_api_key', key);
+                showToast('Chave API atualizada com sucesso!', 'success');
+            } else {
+                userApiKey = DEFAULT_API_KEY;
+                localStorage.removeItem('studpetro_api_key');
+                showToast('Chave API restaurada para a chave padrão.', 'info');
+            }
+            closeApiKeyModal();
+        }
+
+        function renderRecentQuizzes() {
+            const container = document.getElementById('dashboard-recent-quizzes');
+            container.innerHTML = '';
+
+            quizzes.slice(0, 3).forEach(q => {
+                const card = document.createElement('div');
+                card.className = "bg-slate-50 dark:bg-slate-900/60 p-4 rounded-xl border border-slate-200 dark:border-slate-700 hover:border-brand-500 transition-all flex flex-col justify-between space-y-3";
+                card.innerHTML = `
+                    <div>
+                        <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-brand-100 text-brand-700 dark:bg-brand-950/60 dark:text-brand-300 uppercase">${q.topic || 'Geral'}</span>
+                        <h4 class="text-sm font-bold text-slate-800 dark:text-white mt-1.5 line-clamp-2">${q.title}</h4>
+                        <p class="text-xs text-slate-400 mt-1"><i class="fa-solid fa-list-ol mr-1"></i>${q.questions.length} Questões estruturadas</p>
+                    </div>
+                    <button onclick="startQuiz('${q.id}')" class="w-full py-2 rounded-lg bg-brand-600 hover:bg-brand-700 text-white font-bold text-xs shadow transition-all">
+                        Iniciar Simulado
+                    </button>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function renderAllQuizzes() {
+            const container = document.getElementById('all-quizzes-grid');
+            container.innerHTML = '';
+
+            quizzes.forEach(q => {
+                const card = document.createElement('div');
+                card.className = "bg-white dark:bg-slate-800 p-5 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm hover:shadow-md transition-all flex flex-col justify-between space-y-4";
+                card.innerHTML = `
+                    <div>
+                        <div class="flex justify-between items-start">
+                            <span class="text-xs font-bold px-2.5 py-1 rounded-full bg-orange-100 text-brand-700 dark:bg-orange-950/60 dark:text-brand-300 uppercase">${q.topic || 'Simulado'}</span>
+                            <button onclick="deleteQuiz('${q.id}')" class="text-slate-400 hover:text-rose-500 transition-colors" title="Excluir Quiz"><i class="fa-solid fa-trash-can"></i></button>
+                        </div>
+                        <h3 class="text-base font-bold text-slate-800 dark:text-white mt-3">${q.title}</h3>
+                        <p class="text-xs text-slate-500 mt-1"><i class="fa-solid fa-clipboard-check mr-1"></i>${q.questions.length} questões com resolução e dicas</p>
+                    </div>
+                    <button onclick="startQuiz('${q.id}')" class="w-full py-2.5 rounded-xl gradient-orange text-white font-bold text-sm shadow-orange-glow hover:opacity-95 transition-all">
+                        Responder Agora
+                    </button>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function deleteQuiz(id) {
+            if (quizzes.length <= 1) {
+                showToast('Mantenha ao menos um simulado cadastrado.', 'warning');
+                return;
+            }
+            quizzes = quizzes.filter(q => q.id !== id);
+            saveQuizzes();
+            deleteQuizFromCloud(id);
+            renderAllQuizzes();
+            renderRecentQuizzes();
+            showToast('Quiz removido.', 'info');
+        }
+
+        function pastePresetSample() {
+            document.getElementById('generator-title').value = "Simulado Petrobras - Processamento Técnico";
+            document.getElementById('generator-raw-text').value = `1. O que é o ponto de anilina de um combustível e qual sua importância técnica?
+A) Temperatura máxima de combustão em turbinas de alta pressão.
+B) Temperatura mínima em que volumes iguais de anilina e combustível se misturam completamente, indicando o teor de hidrocarbonetos aromáticos.
+C) Pressão de estocagem de gás natural liquefeito.
+D) Ponto de congelamento de óleos lubrificantes sintéticos.
+
+2. Qual a função de uma válvula de alívio de pressão (PSV) em uma refinaria de petróleo?
+A) Aumentar a vazão de fluido nas tubulações primárias.
+B) Proteger vasos de pressão e tubulações contra sobrepressão perigosa, descarregando o excesso de fluido.
+C) Medir a temperatura interna dos reatores.
+D) Misturar aditivos químicos no combustível.`;
+            showToast('Texto de exemplo carregado na caixa!', 'success');
+        }
+
+        function saveQuizzes() {
+            localStorage.setItem('studpetro_quizzes', JSON.stringify(quizzes));
+        }
+        function saveSlides() {
+            localStorage.setItem('studpetro_slides', JSON.stringify(slides));
+        }
+        function saveStats() {
+            localStorage.setItem('studpetro_stats', JSON.stringify(stats));
+            saveStatsToCloud(stats);
+        }
+
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            
+            let bg = 'bg-slate-900 text-white';
+            if (type === 'success') bg = 'bg-emerald-600 text-white';
+            if (type === 'warning') bg = 'bg-amber-500 text-white';
+            if (type === 'error') bg = 'bg-rose-600 text-white';
+
+            toast.className = `${bg} px-4 py-3 rounded-xl shadow-2xl text-xs font-bold flex items-center space-x-2 pointer-events-auto animate-bounce`;
+            toast.innerHTML = `<i class="fa-solid fa-bell"></i><span>${message}</span>`;
+
+            container.appendChild(toast);
+            setTimeout(() => {
+                toast.remove();
+            }, 3500);
+        }
+
+        window.switchTab = switchTab;
+        window.triggerPwaInstall = triggerPwaInstall;
+        window.openApiKeyModal = openApiKeyModal;
+        window.closeApiKeyModal = closeApiKeyModal;
+        window.saveApiKeyFromModal = saveApiKeyFromModal;
+        window.setTheme = setTheme;
+        window.startWeakPointsQuiz = startWeakPointsQuiz;
+        window.pastePresetSample = pastePresetSample;
+        window.generateQuizFromText = generateQuizFromText;
+        window.toggleHint = toggleHint;
+        window.submitPlayerAnswer = submitPlayerAnswer;
+        window.nextPlayerQuestion = nextPlayerQuestion;
+        window.generateCustomSlideDeck = generateCustomSlideDeck;
+        window.prevSlide = prevSlide;
+        window.nextSlide = nextSlide;
+        window.executePwaInstallPrompt = executePwaInstallPrompt;
+        window.closePwaModal = closePwaModal;
+        window.startQuiz = startQuiz;
+        window.deleteQuiz = deleteQuiz;
+    </script>
+</body>
+</html>
