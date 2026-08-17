@@ -648,7 +648,8 @@
         let isCloudSynced = false;
 
         // APP STATE STORE
-        const DEFAULT_API_KEY = 'AQ.Ab8RN6J5A9WtEM6tgUbAjDZZUxITbjEGrLUGV8l70UTLw33QtQ';
+        // Default to empty string so Canvas runtime automatically injects valid key if user key is absent/invalid
+        const DEFAULT_API_KEY = '';
         let userApiKey = localStorage.getItem('studpetro_api_key') || DEFAULT_API_KEY;
         let deferredPwaPrompt = null;
 
@@ -754,7 +755,7 @@
                     await signInAnonymously(auth);
                 }
             } catch (err) {
-                console.warn("Autenticação Firebase falhou, operando em modo local:", err);
+                // Silently handle auth/configuration-not-found or network blocks
                 updateCloudStatus(false);
             }
         }
@@ -783,7 +784,7 @@
             } else {
                 icon.className = "fa-solid fa-cloud-slash text-lg text-amber-500";
                 text.className = "hidden xl:inline text-xs font-semibold bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300 px-2 py-0.5 rounded-full";
-                text.innerText = "Modo Local";
+                text.innerText = "Modo Local (Offline/Anônimo)";
             }
         }
 
@@ -893,11 +894,12 @@
         });
 
         function initPWA() {
+            const currentUrl = window.location.href.startsWith('blob:') ? window.location.origin : window.location.href;
             const manifestData = {
                 name: "STUDPETRO - Plataforma Corporativa de Quizzes",
                 short_name: "STUDPETRO",
                 description: "Plataforma Corporativa de Quizzes, Simulados e Aprendizado",
-                start_url: "./",
+                start_url: currentUrl,
                 display: "standalone",
                 background_color: "#0f172a",
                 theme_color: "#ea580c",
@@ -923,20 +925,25 @@
             manifestLink.href = manifestURL;
             document.head.appendChild(manifestLink);
 
-            if ('serviceWorker' in navigator) {
-                const swContent = `
-                    const CACHE_NAME = 'studpetro-cache-v2';
-                    self.addEventListener('install', (e) => self.skipWaiting());
-                    self.addEventListener('activate', (e) => e.waitUntil(clients.claim()));
-                    self.addEventListener('fetch', (e) => {
-                        e.respondWith(
-                            fetch(e.request).catch(() => caches.match(e.request))
-                        );
-                    });
-                `;
-                const swBlob = new Blob([swContent], { type: 'application/javascript' });
-                const swUrl = URL.createObjectURL(swBlob);
-                navigator.serviceWorker.register(swUrl).catch(err => console.log('PWA SW:', err));
+            // Avoid attempting SW registration from a blob: URL as browsers block it
+            if ('serviceWorker' in navigator && !window.location.href.startsWith('blob:')) {
+                try {
+                    const swContent = `
+                        const CACHE_NAME = 'studpetro-cache-v2';
+                        self.addEventListener('install', (e) => self.skipWaiting());
+                        self.addEventListener('activate', (e) => e.waitUntil(clients.claim()));
+                        self.addEventListener('fetch', (e) => {
+                            e.respondWith(
+                                fetch(e.request).catch(() => caches.match(e.request))
+                            );
+                        });
+                    `;
+                    const swBlob = new Blob([swContent], { type: 'application/javascript' });
+                    const swUrl = URL.createObjectURL(swBlob);
+                    navigator.serviceWorker.register(swUrl).catch(() => {});
+                } catch (e) {
+                    // Ignore SW registration errors in preview environments
+                }
             }
 
             window.addEventListener('beforeinstallprompt', (e) => {
@@ -1188,7 +1195,9 @@
             const questionBlocks = rawText.split(/(?:^|\n)(?=(?:Questão\s+)?\d+[\.\)\-]\s+)/gi).map(b => b.trim()).filter(b => b.length > 0);
             const questions = [];
 
-            questionBlocks.forEach((block, idx) => {
+            const blocksToProcess = questionBlocks.length > 0 ? questionBlocks : rawText.split(/\n\s*\n/).filter(b => b.trim().length > 0);
+
+            blocksToProcess.forEach((block, idx) => {
                 const lines = block.split('\n').map(l => l.trim()).filter(l => l.length > 0);
                 if (lines.length === 0) return;
 
@@ -1219,9 +1228,9 @@
                     questionText: qText || `Questão ${idx + 1}`,
                     options: options.slice(0, 5),
                     correctIndex: correctIdx,
-                    explanation: `Resolução técnica da questão ${idx + 1} extraída diretamente do texto.`,
-                    tip: `Atenção aos detalhes do enunciado na questão ${idx + 1}.`,
-                    mnemonic: `MACETE Q${idx + 1}: Memorize o conceito central do tópico!`,
+                    explanation: `Resolução técnica da questão ${idx + 1} extraída diretamente do texto colado.`,
+                    tip: `Atenção aos detalhes do conceito na questão ${idx + 1}.`,
+                    mnemonic: `MACETE Q${idx + 1}: Grave o termo principal do enunciado!`,
                     topic: 'Conhecimentos Técnicos'
                 });
             });
@@ -1274,7 +1283,6 @@
 
                     const systemPrompt = `Você é um especialista em estruturar provas e simulados corporativos para a indústria de petróleo e gás (STUDPETRO).
 Sua missão MAIS IMPORTANTE é: Você DEVE processar e incluir TODAS AS QUESTÕES fornecidas no texto do usuário, SEM OMITIR, RESUMIR OU EXCLUIR NENHUMA QUESTÃO.
-Se o texto fornecido contiver 12 questões, você DEVE retornar exatamente 12 objetos de questões no array 'questions'.
 
 Para CADA questão gerada você DEVE fornecer:
 1. "questionText": Enunciado fiel, completo e sem cortes.
@@ -1283,14 +1291,13 @@ Para CADA questão gerada você DEVE fornecer:
 4. "explanation": Explicação e fundamentação técnica detalhada da resposta.
 5. "tip": Dica objetiva para direcionar o raciocínio.
 6. "mnemonic": Macete ou mnemônico em português para memorização do conceito.
-7. "topic": O tópico principal da questão (ex: NR-20, Refino, Perfuração, Legislação, Manutenção, Combustão).`;
+7. "topic": O tópico principal da questão.`;
 
                     const userQuery = `Analise o trecho a seguir e estruture TODAS AS QUESTÕES nele contidas em formato JSON estrito:
 ---
 ${batch.text}
 ---
-Nível de Foco: ${difficulty}.
-LEMBRE-SE: Seja 100% fiel ao número de questões do texto acima. Não pule nenhuma!`;
+Nível de Foco: ${difficulty}.`;
 
                     const payload = {
                         contents: [{ parts: [{ text: userQuery }] }],
@@ -1354,13 +1361,18 @@ LEMBRE-SE: Seja 100% fiel ao número de questões do texto acima. Não pule nenh
                 }
 
                 if (allQuestions.length === 0) {
-                    throw new Error("Nenhuma questão foi retornada da IA. Usando processamento local.");
+                    throw new Error("Nenhuma questão retornada pela API. Acionando motor local.");
                 }
 
             } catch (err) {
-                console.error("Erro na geração por lotes:", err);
+                console.warn("Mudando para processamento local STUDPETRO:", err);
+                if (err.message === "API_KEY_UNAUTHORIZED") {
+                    showToast('Chave API não autorizada. Processando com o motor local STUDPETRO...', 'warning');
+                } else {
+                    showToast('Processando simulado pelo motor interno STUDPETRO...', 'info');
+                }
                 const fallbackQuestions = parseLocalQuestionnaire(rawText);
-                if (fallbackQuestions.length > allQuestions.length) {
+                if (fallbackQuestions.length > 0) {
                     allQuestions = fallbackQuestions;
                 }
             } finally {
@@ -1401,17 +1413,20 @@ LEMBRE-SE: Seja 100% fiel ao número de questões do texto acima. Não pule nenh
             saveQuizzes();
             saveQuizToCloud(newQuiz);
 
-            showToast(`Quiz com ${allQuestions.length} questões gerado e salvo na nuvem!`, 'success');
+            showToast(`Quiz com ${allQuestions.length} questões gerado e salvo com sucesso!`, 'success');
             startQuiz(newQuiz.id);
         }
 
-        async function fetchWithRetry(url, options, retries = 3, delay = 1000) {
-            for (let i = 0; i < retries; i++) {
+        async function fetchWithRetry(url, options, retries = 1, delay = 800) {
+            for (let i = 0; i <= retries; i++) {
                 try {
                     const res = await fetch(url, options);
+                    if (res.status === 401) {
+                        throw new Error("API_KEY_UNAUTHORIZED");
+                    }
                     if (res.ok) return res;
                 } catch (e) {
-                    if (i === retries - 1) throw e;
+                    if (e.message === "API_KEY_UNAUTHORIZED" || i === retries) throw e;
                 }
                 await new Promise(r => setTimeout(r, delay * Math.pow(2, i)));
             }
